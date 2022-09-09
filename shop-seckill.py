@@ -7,17 +7,8 @@ import sys
 import configparser
 
 
-##################配置 ################
-
-# p_id = '379' #商品id
-# buy_time = "2022-09-09 11:27:00000000"     #购买时间
-# tel="18256751261"  #电话
-# name="test" #姓名
-# msg="50089967585690428" #买家留言
-# cookie='\u003d20220908;_FSESSIONID\u003dM1ggXuQV22tyNDVW;loginMemberCacct\u003dtv26380856;_siteStatReVisit\u003dreVisit_28359275;_siteStatDay\u003d20220908;_siteStatRedirectUv\u003dredirectUv_28359275;_siteStatVisitTime\u003d1662644655970;_siteStatVisit\u003dvisit_28359275;_siteStatVisitorType\u003dvisitorType_28359275;_filterVisitTime\u003dfehihmjlnkmu;_cliid\u003dAgRugMGb4HBmuNwZ;loginIntegralTip2835927557723\u003dtrue;lastLoginTime2835927557723\u003d2022-09-08;loginMemberAcct\u003dxcx_2S01kxKDYJz6jetP;_siteStatId\u003df9c12434-0b5e-44f5-ba45-0d407b14974b;is_beta_site_28359275_0\u003dfalse;loginCaid\u003d28359275;siteId\u003d0'
-#
-
-##################配置 ################
+x = requests.Session()  # 实例化requests.Session对象
+url = "https://wx7.jzapp.fkw.com/28359275"
 
 def file_config():  # 初始化配置文件
     global p_id
@@ -45,11 +36,6 @@ def file_config():  # 初始化配置文件
         print("user.ini配置文件不存在当前文件夹下。")
         input('')
         sys.exit(0)
-
-
-x = requests.Session()  # 实例化requests.Session对象
-url = "https://wx7.jzapp.fkw.com/28359275"
-
 
 def get_preid(head):
     data = {
