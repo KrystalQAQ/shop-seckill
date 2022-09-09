@@ -2,23 +2,53 @@ import datetime
 import json
 import time
 import requests
-from cffi.backend_ctypes import long
-
-##################配置 ################
-
-p_id = 'xxx' #商品id
-buy_time = "2022-09-09 11:27:00000000"     #购买时间
-tel="xxxx"  #电话
-name="xxx" #姓名
-msg="xxxx" #买家留言
-cookie='xxx'
+import os
+import sys
+import configparser
 
 
 ##################配置 ################
+
+# p_id = '379' #商品id
+# buy_time = "2022-09-09 11:27:00000000"     #购买时间
+# tel="18256751261"  #电话
+# name="test" #姓名
+# msg="50089967585690428" #买家留言
+# cookie='\u003d20220908;_FSESSIONID\u003dM1ggXuQV22tyNDVW;loginMemberCacct\u003dtv26380856;_siteStatReVisit\u003dreVisit_28359275;_siteStatDay\u003d20220908;_siteStatRedirectUv\u003dredirectUv_28359275;_siteStatVisitTime\u003d1662644655970;_siteStatVisit\u003dvisit_28359275;_siteStatVisitorType\u003dvisitorType_28359275;_filterVisitTime\u003dfehihmjlnkmu;_cliid\u003dAgRugMGb4HBmuNwZ;loginIntegralTip2835927557723\u003dtrue;lastLoginTime2835927557723\u003d2022-09-08;loginMemberAcct\u003dxcx_2S01kxKDYJz6jetP;_siteStatId\u003df9c12434-0b5e-44f5-ba45-0d407b14974b;is_beta_site_28359275_0\u003dfalse;loginCaid\u003d28359275;siteId\u003d0'
+#
+
+##################配置 ################
+
+def file_config():  # 初始化配置文件
+    global p_id
+    global buy_time
+    global tel
+    global name
+    global msg
+    global cookie
+    cf = configparser.RawConfigParser()
+    if (os.path.exists('user.ini')):
+        try:
+            cf.read("user.ini", encoding='utf-8')
+            cookie = cf.get("user", "cookie")
+            msg = cf.get("user", "msg")
+            name = cf.get("user", "name")
+            p_id = cf.get("user", "p_id")
+            tel = cf.get("user", "tel")
+            buy_time = cf.get("user", "buy_time")
+            print(cookie)
+        except Exception as e:
+            print("配置文件错误", e)
+            input('')
+            sys.exit(0)
+    else:
+        print("user.ini配置文件不存在当前文件夹下。")
+        input('')
+        sys.exit(0)
+
 
 x = requests.Session()  # 实例化requests.Session对象
 url = "https://wx7.jzapp.fkw.com/28359275"
-
 
 
 def get_preid(head):
@@ -34,13 +64,19 @@ def get_preid(head):
 
     }
     re = x.post(url=url + "/0/mstl_h.jsp?cmd\u003dsetWafCk_addImmePreOrder", headers=head, data=data)
-    a = 0
-    try:
-        a = re.json()['preOrderId']
-        print("生成的订单号是：%d"%a)
-    except Exception as err:
-        print('An exception happened: ' + str(err))
-    return a
+    # print("######get_preid######")
+    print(re.text)
+
+    if (re.json()['success']):
+        # print("yes")
+        return re.json()['preOrderId']
+    # try:
+    #     a = re.json()['preOrderId']
+    #     print("生成的订单号是：%d"%a)
+    # except Exception as err:
+    #     print(re.json()['msg'])
+    else:
+        return False
 
 
 def submit_order(head, preOrderId):
@@ -50,8 +86,8 @@ def submit_order(head, preOrderId):
         'settleTicket': ''
     }
     re = x.post(url=url + "/0/mstl_h.jsp?cmd\u003dsetWafCk_settleOrder", headers=head, data=data)
-    print("######submit_order######")
-    print(re.text)
+    # print("######submit_order######")
+    # print(re.text)
 
     return re.json()['success']
 
@@ -63,9 +99,11 @@ def add_message(head, preOrderId):
         'remark': msg
     }
     re = x.post(url=url + "/0/mstl_h.jsp?cmd\u003dsetWafCk_setRemarkService", headers=head, data=data)
-    print("######add_message######")
-    print(re.text)
-
+    # print("######add_message######")
+    # print(re.text)
+    return re.json()['success']
+    # print(re.json()['success'])
+    # return re.json()['success']
 
 
 def add_form(head, preOrderId):
@@ -103,23 +141,46 @@ def add_form(head, preOrderId):
 
     }
     re = x.post(url=url + "/0/mstl_h.jsp?cmd\u003dsetWafCk_batchSetDeliveryService", headers=head, data=data)
-
+    # print("######解析3######")
+    # print(re.text)
+    return re.json()['success']
 
 
 def miao(head):
     # 生成订单id
+
     preOrderId = get_preid(head)
-    print("preOrderId=%d" % preOrderId)
-    # 填写订单留言
-    add_message(head, preOrderId)
-    # 填写表单
-    add_form(head, preOrderId)
-    # 提交订单
-    result = submit_order(head, preOrderId)
-    return result
+    print("preOrderId=%s" % preOrderId)
+    if preOrderId:
+
+        # 填写订单留言
+        add_message(head, preOrderId)
+        # 填写表单
+        if add_form(head, preOrderId):
+
+            # 提交订单
+            if submit_order(head, preOrderId):
+
+                return True
+            else:
+                print("重新提交1")
+                while True:
+                    flag = submit_order(head, preOrderId)
+                    print("重新提交2")
+                    if flag:
+                        print("重新提交3")
+                        return True
+                        break
+    else:
+        while True:
+            flag = get_preid(head)
+            # print("flag:"+flag)
+            if flag:
+                break
 
 
 if __name__ == '__main__':
+    file_config()
     head = {
         "Host": "wx7.jzapp.fkw.com",
         "Connection": "keep-alive",
@@ -145,23 +206,32 @@ if __name__ == '__main__':
         time1 = time.time()
 
         # 判断是否到达抢购时间
-        if int(round(time1 * 1000)) >= timestamp :
+        if int(round(time1 * 1000)) >= timestamp:
 
+            #     aaa=1
+            #
+            # else:
             start_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+            time4 = time.time()
+            end_time = int(round(time4 * 1000))
+
             print("#####################开始抢购####################")
             # break
             result = miao(head)
+            print(result)
             if result:
                 print("###秒杀成功###")
                 time3 = time.time()
                 endtime = int(round(time3 * 1000))
                 # print('标准时间戳:%d' % timestamp)
+                # print('开始时间戳:%d' % end_time)
                 # print('结束时间戳:%d' % endtime)
                 # time2 = time.time()
-                end= datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+                end = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
                 print('开始时间:%s' % start_time)
                 print('结束时间:%s' % end)
-                print("耗时：%d " % (endtime - timestamp))
+                print("耗时：%f s" % (int(endtime - end_time) / 1000))
+                # print("耗时：%d " % (end - start_time))
                 break
             else:
                 print("秒杀失败")
