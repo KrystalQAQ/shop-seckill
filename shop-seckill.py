@@ -7,8 +7,7 @@ import sys
 import configparser
 
 
-x = requests.Session()  # 实例化requests.Session对象
-url = "https://wx7.jzapp.fkw.com/28359275"
+
 
 def file_config():  # 初始化配置文件
     global p_id
@@ -37,6 +36,12 @@ def file_config():  # 初始化配置文件
         input('')
         sys.exit(0)
 
+
+x = requests.Session()  # 实例化requests.Session对象
+url = "https://wx7.jzapp.fkw.com/28359275"
+
+
+
 def get_preid(head):
     data = {
         'pdInfoList': "[]",
@@ -50,19 +55,19 @@ def get_preid(head):
 
     }
     re = x.post(url=url + "/0/mstl_h.jsp?cmd\u003dsetWafCk_addImmePreOrder", headers=head, data=data)
-    # print("######get_preid######")
+    print("######get_preid######")
     print(re.text)
 
-    if (re.json()['success']):
+    # if (re.json()['success']):
         # print("yes")
-        return re.json()['preOrderId']
+    return re.json()
     # try:
     #     a = re.json()['preOrderId']
     #     print("生成的订单号是：%d"%a)
     # except Exception as err:
     #     print(re.json()['msg'])
-    else:
-        return False
+    # else:
+    #     return False
 
 
 def submit_order(head, preOrderId):
@@ -72,8 +77,8 @@ def submit_order(head, preOrderId):
         'settleTicket': ''
     }
     re = x.post(url=url + "/0/mstl_h.jsp?cmd\u003dsetWafCk_settleOrder", headers=head, data=data)
-    # print("######submit_order######")
-    # print(re.text)
+    print("######submit_order######")
+    print(re.text)
 
     return re.json()['success']
 
@@ -85,8 +90,8 @@ def add_message(head, preOrderId):
         'remark': msg
     }
     re = x.post(url=url + "/0/mstl_h.jsp?cmd\u003dsetWafCk_setRemarkService", headers=head, data=data)
-    # print("######add_message######")
-    # print(re.text)
+    print("######add_message######")
+    print(re.text)
     return re.json()['success']
     # print(re.json()['success'])
     # return re.json()['success']
@@ -127,42 +132,35 @@ def add_form(head, preOrderId):
 
     }
     re = x.post(url=url + "/0/mstl_h.jsp?cmd\u003dsetWafCk_batchSetDeliveryService", headers=head, data=data)
-    # print("######解析3######")
-    # print(re.text)
+    print("######add_form######")
+    print(re.text)
     return re.json()['success']
 
 
 def miao(head):
-    # 生成订单id
+    preOrderId=0
+    flag=False
+    while True:
+        data = get_preid(head)
+        # print(data['success'])
+        if(data['success']):
+            preOrderId=data['preOrderId']
+            break
 
-    preOrderId = get_preid(head)
-    print("preOrderId=%s" % preOrderId)
-    if preOrderId:
+    while True:
+        data=add_form(head, preOrderId)
+        # print(data['success'])
+        if(data):
+            break
+    while True:
+        data=submit_order(head, preOrderId)
+        # print(data['success'])
+        if(data):
+            flag=True
+            break
 
-        # 填写订单留言
-        add_message(head, preOrderId)
-        # 填写表单
-        if add_form(head, preOrderId):
+    return flag
 
-            # 提交订单
-            if submit_order(head, preOrderId):
-
-                return True
-            else:
-                print("重新提交1")
-                while True:
-                    flag = submit_order(head, preOrderId)
-                    print("重新提交2")
-                    if flag:
-                        print("重新提交3")
-                        return True
-                        break
-    else:
-        while True:
-            flag = get_preid(head)
-            # print("flag:"+flag)
-            if flag:
-                break
 
 
 if __name__ == '__main__':
@@ -204,7 +202,7 @@ if __name__ == '__main__':
             print("#####################开始抢购####################")
             # break
             result = miao(head)
-            print(result)
+            print("result"+str(result))
             if result:
                 print("###秒杀成功###")
                 time3 = time.time()
