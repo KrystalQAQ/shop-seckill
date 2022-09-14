@@ -152,6 +152,13 @@ def miao(head):
         # print(data['success'])
         if(data):
             break
+
+    add_message(head, preOrderId)
+    # while True:
+    #     add_message(head, preOrderId)
+    #     # print(data['success'])
+    #     if(data):
+    #         break
     while True:
         data=submit_order(head, preOrderId)
         # print(data['success'])
