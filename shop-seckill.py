@@ -220,3 +220,4 @@ if __name__ == '__main__':
             else:
                 print("秒杀失败")
                 time.sleep(0.1)
+    input("ok")
