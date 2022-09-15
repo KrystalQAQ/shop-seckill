@@ -1,5 +1,6 @@
 import datetime
 import json
+import threading
 import time
 import requests
 import os
@@ -26,7 +27,7 @@ def file_config():  # 初始化配置文件
             p_id = cf.get("user", "p_id")
             tel = cf.get("user", "tel")
             buy_time = cf.get("user", "buy_time")
-            print(cookie)
+            # print(cookie)
         except Exception as e:
             print("配置文件错误", e)
             input('')
@@ -146,14 +147,17 @@ def miao(head):
         if(data['success']):
             preOrderId=data['preOrderId']
             break
-
+    t1 = threading.Thread(target=add_message, args=(head,preOrderId))
+    t1.start()
+    print("t1")
     while True:
+        print("t2")
         data=add_form(head, preOrderId)
         # print(data['success'])
         if(data):
             break
 
-    add_message(head, preOrderId)
+    # add_message(head, preOrderId)
     # while True:
     #     add_message(head, preOrderId)
     #     # print(data['success'])
@@ -202,24 +206,26 @@ if __name__ == '__main__':
             #     aaa=1
             #
             # else:
-            start_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
-            time4 = time.time()
-            end_time = int(round(time4 * 1000))
+            # start_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+
 
             print("#####################开始抢购####################")
             # break
+            time4 = time.time()
+            end_time = int(round(time4 * 1000))
             result = miao(head)
+            time3 = time.time()
+            endtime = int(round(time3 * 1000))
             print("result"+str(result))
             if result:
                 print("###秒杀成功###")
-                time3 = time.time()
-                endtime = int(round(time3 * 1000))
+
                 # print('标准时间戳:%d' % timestamp)
                 # print('开始时间戳:%d' % end_time)
                 # print('结束时间戳:%d' % endtime)
                 # time2 = time.time()
                 end = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
-                print('开始时间:%s' % start_time)
+                # print('开始时间:%s' % start_time)
                 print('结束时间:%s' % end)
                 print("耗时：%f s" % (int(endtime - end_time) / 1000))
                 # print("耗时：%d " % (end - start_time))

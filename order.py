@@ -5,11 +5,7 @@ import sys
 import requests
 from prettytable import PrettyTable
 
-# import only system from os
-from os import system, name
 
-# import sleep to show output for some time period
-from time import sleep
 
 x = requests.Session()  # 实例化requests.Session对象
 url = "https://wx7.jzapp.fkw.com/28359275"
@@ -19,18 +15,7 @@ idList = []
 productList = []
 
 
-def clear():
-    # for windows
-    # print(name)
-    # if name == 'nt':
-    _ = system('cls')
 
-
-# for mac and linux(here, os.name is 'posix')
-# else:
-#     _ = system('clear')
-
-# print out some text
 
 
 def file_config():  # 初始化配置文件
@@ -204,12 +189,15 @@ if __name__ == '__main__':
     # productList=allproduct(head,1)
     # showproduct(productList,head)
 
+
+
+
     person(head)
         # c=allproduct(head, i['ci'])
     while True:
-        clear()
+        os.system('cls || clear')
         table = PrettyTable(['重庆明好医院后台系统'])
-        table.add_row(["0.个人信息"])
+        table.add_row(["0.抢购信息"])
         table.add_row(["1.疫苗查询"])
         table.add_row(["2.分类查询"])
         table.add_row(["3.订单管理"])
@@ -218,16 +206,16 @@ if __name__ == '__main__':
         print(table)
         a=input("输入选项：")
         if (a=="0"):
-            clear()
+            os.system('cls || clear')
             p=person(head)
             n=getProduct(head,p_id)['name']
-            table = PrettyTable(['ID', '名称','姓名','电话','身份证号码','秒杀商品','抢购时间'])
+            table = PrettyTable(['ID', '微信名称','姓名','电话','身份证号码','秒杀商品','抢购时间'])
             table.add_row([p['id'], p['name'],name,tel,msg,n,buy_time[0:19]])
             print(table)
 
             input("回车返回")
         if(a=='1'):
-            clear()
+            os.system('cls || clear')
             c = allproduct(head, 1)
             showproduct(c, head)
             p_id=input("输入你要秒杀的id：")
@@ -236,7 +224,7 @@ if __name__ == '__main__':
             conf.set("user", "p_id", p_id)
             conf.write(open('user.ini', "w", encoding='utf8'))
             input("回车退出")
-            clear()
+            os.system('cls || clear')
 
         if(a=='2'):
 
@@ -249,13 +237,13 @@ if __name__ == '__main__':
                 table.add_row([i['ci'], i['cn']])
             print(table)
             q = input("输入要查询的ID：")
-            clear()
+            os.system('cls || clear')
             list = allproduct(head, q)
             showproduct(list, head)
             input("回车返回上一级")
 
         if(a=='3'):
-            clear()
+            os.system('cls || clear')
             while True:
                 getOrder(head)
                 b = input("输入你要删除的订单：")
@@ -267,5 +255,5 @@ if __name__ == '__main__':
                     # print("重试")
                     input("删除失败，按任意键请重试")
                     break
-                    clear()
+                    os.system('cls || clear')
     input("任意键返回")
