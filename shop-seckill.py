@@ -149,20 +149,15 @@ def miao(head):
             break
     t1 = threading.Thread(target=add_message, args=(head,preOrderId))
     t1.start()
-    print("t1")
+
     while True:
-        print("t2")
+
         data=add_form(head, preOrderId)
         # print(data['success'])
         if(data):
             break
 
-    # add_message(head, preOrderId)
-    # while True:
-    #     add_message(head, preOrderId)
-    #     # print(data['success'])
-    #     if(data):
-    #         break
+
     while True:
         data=submit_order(head, preOrderId)
         # print(data['success'])
