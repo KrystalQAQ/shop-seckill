@@ -118,13 +118,14 @@ def allproduct(head, num):
 
 
 def showproduct(productList, head):
-    table = PrettyTable(['ID', '产品', '销量', "时间"])
+    table = PrettyTable(['ID', '产品', '销量', "时间","库存量"])
     for i in productList:
         a = i['id']
         b = i['name']
         c = i['sales']
+        e = i['mallAmount']
         d = getProduct(head, i['id'])['productTimedAddTimeStr1']
-        table.add_row([a, b, c, d])
+        table.add_row([a, b, c, d,e])
     # table.align["时间"] = 'r'
     # table.align["产品"] = 'r'
     # table.align["销量"] = 'l'
@@ -212,17 +213,17 @@ if __name__ == '__main__':
             table = PrettyTable(['ID', '微信名称','姓名','电话','身份证号码','秒杀商品','抢购时间'])
             table.add_row([p['id'], p['name'],name,tel,msg,n,buy_time[0:19]])
             print(table)
-
-            input("回车返回")
-        if(a=='1'):
-            os.system('cls || clear')
-            c = allproduct(head, 1)
-            showproduct(c, head)
             p_id=input("输入你要秒杀的id：")
             conf = configparser.ConfigParser()
             conf.read("user.ini", encoding='utf-8')
             conf.set("user", "p_id", p_id)
             conf.write(open('user.ini', "w", encoding='utf8'))
+            input("回车返回")
+        if(a=='1'):
+            os.system('cls || clear')
+            c = allproduct(head, 1)
+            showproduct(c, head)
+
             input("回车退出")
             os.system('cls || clear')
 
