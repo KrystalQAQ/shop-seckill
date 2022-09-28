@@ -1,11 +1,11 @@
 import configparser
+import datetime
 import os
 import sys
+import time
 
 import requests
 from prettytable import PrettyTable
-
-
 
 x = requests.Session()  # 实例化requests.Session对象
 url = "https://wx7.jzapp.fkw.com/28359275"
@@ -13,9 +13,8 @@ productNameList = []
 orderStausNameList = []
 idList = []
 productList = []
-
-
-
+gbproductList = []
+zfproductList = []
 
 
 def file_config():  # 初始化配置文件
@@ -47,36 +46,69 @@ def file_config():  # 初始化配置文件
 
 
 def getOrder(head):
-    idList = []
-    productNameList = []
-    orderStausNameList = []
-    data = {
-        'page': 0,
-        'orderStatusList': [0]
-    }
-    re = x.post(url + "/0/wxmallapp_h.jsp?cmd=getOrderList", headers=head, data=data)
-    for i in re.json()['rtData'].get('orderList'):
-        # print(i['productList'][0]['productName'])
-        productNameList.append(i['productList'][0]['productName'])
-        orderStausNameList.append(i['orderStausName'])
-        idList.append(i['id'])
-    table = PrettyTable(['ID', '产品', '状态'])
-    for i in range(len(productNameList)):
-        a = idList[i]
-        b = productNameList[i]
-        c = orderStausNameList[i]
-        table.add_row([a, b, c])
+    table = PrettyTable(['ID', '产品', '姓名', '电话', '身份证号码', '下单时间', '状态'])
+    n = 0
+
+    while True:
+        idList = []
+        productNameList = []
+        orderStausNameList = []
+        data = {
+            'page': n,
+            'orderStatusList': [0]
+        }
+        re = x.post(url + "/0/wxmallapp_h.jsp?cmd=getOrderList", headers=head, data=data)
+        # print(re.json())
+        if (len(re.json()['rtData'].get('orderList')) == 0):
+            break
+        for i in re.json()['rtData'].get('orderList'):
+            # print(i['orderStatus'])
+            productNameList.append(i['productList'][0]['productName'])
+            orderStausNameList.append(i['orderStausName'])
+            idList.append(i['id'])
+            if (i['orderStatus'] == 25):
+                gbproductList.append(i['id'])
+            if (i['orderStatus'] == 5):
+                zfproductList.append(i['id'])
+
+        for i in range(len(productNameList)):
+            a = idList[i]
+            k = detail(a)
+            b = productNameList[i]
+            c = orderStausNameList[i]
+
+            table.add_row([a, b, k['prop0'], k['prop1'], k['msg'],
+                           time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(k['createTime'] / 1000)), c])
+        n = n + 1
     print(table)
 
 
-def delOrder(id):
+def qxOrder(id):
     data = {
         'id': id,
         'status': 25,
         'isFromUser': "true"
     }
     re = x.post(url + "/0/order_h.jsp?cmd=setStatus", headers=head, data=data)
+    print(re.json())
+    return re.json()['success']
+
+
+def detail(orderId):
+    data = {
+        'orderId': orderId
+    }
+    re = x.post(url + "/0/wxmallapp_h.jsp?cmd=getMstlPage&_isNewLogic=true", headers=head, data=data)
     # print(re.json())
+    return re.json()['order']
+
+
+def delOrder(id):
+    data = {
+        'id': id,
+    }
+    re = x.post(url + "/0/order_h.jsp?cmd=memberDeleteOrder", headers=head, data=data)
+    print(re.json())
     return re.json()['success']
 
 
@@ -118,14 +150,14 @@ def allproduct(head, num):
 
 
 def showproduct(productList, head):
-    table = PrettyTable(['ID', '产品', '销量', "时间","库存量"])
+    table = PrettyTable(['ID', '产品', '销量', "时间", "库存量"])
     for i in productList:
         a = i['id']
         b = i['name']
         c = i['sales']
         e = i['mallAmount']
         d = getProduct(head, i['id'])['productTimedAddTimeStr1']
-        table.add_row([a, b, c, d,e])
+        table.add_row([a, b, c, d, e])
     # table.align["时间"] = 'r'
     # table.align["产品"] = 'r'
     # table.align["销量"] = 'l'
@@ -136,17 +168,13 @@ def showproduct(productList, head):
     # table.align["值"] = 'l'
     print(table)
 
+
 def person(head):
-
-
-    data={
-        'cmd' : 'getMemberProp'
+    data = {
+        'cmd': 'getMemberProp'
     }
-    re = x.post('https://wx7.jzapp.fkw.com/28359275/0/wxmallapp_h.jsp?cmd=getMemberProp', headers=head,data=data)
-    # print(re.json()['rtData']['memberInfo'])
+    re = x.post('https://wx7.jzapp.fkw.com/28359275/0/wxmallapp_h.jsp?cmd=getMemberProp', headers=head, data=data)
     return re.json()['rtData']['memberInfo']
-
-
 
 
 def sort(head):
@@ -159,7 +187,9 @@ def sort(head):
         # 'lng': '',
         # 'selfTakeId': 0
     }
-    re = x.get("https://wx7.jzapp.fkw.com/28359275/0/wxmallapp_h.jsp?cmd=getModuleDataFromColV2&colId=301&lng=&lat=&addrInfo={%22prc%22:%22%22,%22cic%22:%22%22,%22coc%22:%22%22}&merchantId=0&selfTakeId=0", headers=head, data=data)
+    re = x.get(
+        "https://wx7.jzapp.fkw.com/28359275/0/wxmallapp_h.jsp?cmd=getModuleDataFromColV2&colId=301&lng=&lat=&addrInfo={%22prc%22:%22%22,%22cic%22:%22%22,%22coc%22:%22%22}&merchantId=0&selfTakeId=0",
+        headers=head, data=data)
     return re.json()['moduleList'][0]['content']['pcl']
 
 
@@ -190,11 +220,8 @@ if __name__ == '__main__':
     # productList=allproduct(head,1)
     # showproduct(productList,head)
 
-
-
-
     person(head)
-        # c=allproduct(head, i['ci'])
+    # c=allproduct(head, i['ci'])
     while True:
         os.system('cls || clear')
         table = PrettyTable(['重庆明好医院后台系统'])
@@ -205,21 +232,21 @@ if __name__ == '__main__':
 
         table.padding_width = 10
         print(table)
-        a=input("输入选项：")
-        if (a=="0"):
+        a = input("输入选项：")
+        if (a == "0"):
             os.system('cls || clear')
-            p=person(head)
-            n=getProduct(head,p_id)['name']
-            table = PrettyTable(['ID', '微信名称','姓名','电话','身份证号码','秒杀商品','抢购时间'])
-            table.add_row([p['id'], p['name'],name,tel,msg,n,buy_time[0:19]])
+            p = person(head)
+            n = getProduct(head, p_id)['name']
+            table = PrettyTable(['ID', '微信名称', '姓名', '电话', '身份证号码', '秒杀商品', '抢购时间'])
+            table.add_row([p['id'], p['name'], name, tel, msg, n, buy_time[0:19]])
             print(table)
-            p_id=input("输入你要秒杀的id：")
+            p_id = input("输入你要秒杀的id：")
             conf = configparser.ConfigParser()
             conf.read("user.ini", encoding='utf-8')
             conf.set("user", "p_id", p_id)
             conf.write(open('user.ini', "w", encoding='utf8'))
             input("回车返回")
-        if(a=='1'):
+        if (a == '1'):
             os.system('cls || clear')
             c = allproduct(head, 1)
             showproduct(c, head)
@@ -227,7 +254,7 @@ if __name__ == '__main__':
             input("回车退出")
             os.system('cls || clear')
 
-        if(a=='2'):
+        if (a == '2'):
 
             b = sort(head)
 
@@ -243,18 +270,30 @@ if __name__ == '__main__':
             showproduct(list, head)
             input("回车返回上一级")
 
-        if(a=='3'):
+        if (a == '3'):
             os.system('cls || clear')
             while True:
                 getOrder(head)
-                b = input("输入你要删除的订单：")
-                c = delOrder(b)
-                if c:
-                    print("删除成功")
-                    break
-                else:
-                    # print("重试")
-                    input("删除失败，按任意键请重试")
-                    break
+                print("1.取消所有待支付的订单")
+                print("2.删除所有的订单")
+                print("3.返回上一级")
+                w = input("输入你的操作：")
+                if (w == '1'):
+                    print(zfproductList)
+                    for i in zfproductList:
+                        qxOrder(i)
+
+                    input("回车退出")
                     os.system('cls || clear')
+                if (w == '2'):
+                    # print(gbproductList)
+                    for i in gbproductList:
+                        delOrder(i)
+
+                    input("回车退出")
+                    os.system('cls || clear')
+                if (w == '3'):
+                    os.system('cls || clear')
+                    break
+
     input("任意键返回")

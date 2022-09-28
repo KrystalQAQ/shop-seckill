@@ -74,7 +74,9 @@ def submit_order(head, preOrderId):
     print("######submit_order######" + str(preOrderId))
     print(re.text)
     if(re.json()['success']):
-       print(time.time())
+       # print(time.time())
+       end = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+       print('结束时间:%s' % end)
        print("success!")
        os._exit(0)
 
@@ -151,7 +153,7 @@ def miao(head):
 
 
     while (len(preid)==0):
-        multi_thread(head,2)
+        multi_thread(head,3)
 
 
     ts1 = {}
@@ -162,15 +164,15 @@ def miao(head):
         t.start()
         ts1[i] = t  #全新的线程
 
-    for i in range(3):
+    for i in range(2):
         t = threading.Thread(target = add_form,args=(head,preid[0]))#target参数填函数名 不要用括号
         t.start()
         ts1[i] = t  #全新的线程
 
-    time.sleep(0.24)
+    time.sleep(0.4)
     while True:
 
-        for i in range(4):
+        for i in range(5):
             t = threading.Thread(target = submit_order,args=(head,preid[0]))#target参数填函数名 不要用括号
             t.start()
             ts2[i] = t  #全新的线程

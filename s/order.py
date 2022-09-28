@@ -1,6 +1,8 @@
 import configparser
+import datetime
 import os
 import sys
+import time
 
 import requests
 from prettytable import PrettyTable
@@ -51,17 +53,21 @@ def file_config():  # 初始化配置文件
 
 def getOrder(head):
     table = PrettyTable(['ID', '产品', '状态'])
-    for i in range(0,40):
+    n=0
+
+    while True:
         idList = []
         productNameList = []
         orderStausNameList = []
         data = {
-            'page': i,
+            'page': n,
             'orderStatusList': [0]
         }
         re = x.post(url + "/0/wxmallapp_h.jsp?cmd=getOrderList", headers=head, data=data)
+        if(len(re.json()['rtData'].get('orderList'))==0):
+            break
         for i in re.json()['rtData'].get('orderList'):
-            print(i['orderStatus'])
+            # print(i['orderStatus'])
             productNameList.append(i['productList'][0]['productName'])
             orderStausNameList.append(i['orderStausName'])
             idList.append(i['id'])
@@ -75,6 +81,7 @@ def getOrder(head):
             b = productNameList[i]
             c = orderStausNameList[i]
             table.add_row([a, b, c])
+        n=n+1
     print(table)
 
 
@@ -87,6 +94,13 @@ def qxOrder(id):
     re = x.post(url + "/0/order_h.jsp?cmd=setStatus", headers=head, data=data)
     print(re.json())
     return re.json()['success']
+def detail(orderId):
+    data = {
+        'orderId':orderId
+    }
+    re = x.post(url + "/0/wxmallapp_h.jsp?cmd=getMstlPage&_isNewLogic=true", headers=head, data=data)
+    print(re.json())
+    return re.json()['order']
 
 def delOrder(id):
     data = {
@@ -263,9 +277,23 @@ if __name__ == '__main__':
             os.system('cls || clear')
             while True:
                 getOrder(head)
+                print("0.查看订单详情")
                 print("1.取消所有待支付的订单")
                 print("2.删除所有的订单")
+                print("3.返回上一级")
                 w=input("输入你的操作：")
+                if (w == '0'):
+                    print(gbproductList)
+                    # for i in gbproductList:
+                    #     delOrder(i)
+                    a=input("输入你要查询的订单：")
+                    c=detail(a)
+                    table = PrettyTable(['订单id', '产品','姓名','电话','身份证号码','下单时间'])
+
+                    table.add_row([c['id'], c['itemList'][0]['productName'],c['prop0'],c['prop1'],c['msg'],time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(c['createTime']/1000))])
+                    print(table)
+                    input("回车退出")
+                    os.system('cls || clear')
                 if (w == '1'):
                     print(zfproductList)
                     for  i in zfproductList:
@@ -274,12 +302,16 @@ if __name__ == '__main__':
                     input("回车退出")
                     os.system('cls || clear')
                 if (w == '2'):
-                    print(gbproductList)
+                    # print(gbproductList)
                     for i in gbproductList:
                         delOrder(i)
 
                     input("回车退出")
                     os.system('cls || clear')
+                if (w == '3'):
+                    os.system('cls || clear')
+                    break
+
                 # b = input("输入你要删除的订单：")
                 # c = delOrder(b)
                 # if c:
